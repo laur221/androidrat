@@ -10,9 +10,12 @@ DATA_LOG_FILE = "data_log.txt"
 def receive_data():
     data = request.data.decode('utf-8')
     print(f"Received data: {data}")
-    # Salvează datele în fișier
-    with open(DATA_LOG_FILE, "a") as file:
-        file.write(data + "\n")
+    # Salvează datele în fișier doar dacă nu sunt goale
+    if data.strip():
+        with open(DATA_LOG_FILE, "a") as file:
+            file.write(data + "\n")
+    else:
+        print("Received empty data!")  # Log pentru date goale
     return "Data received", 200
 
 # Endpoint pentru trimiterea comenzilor
