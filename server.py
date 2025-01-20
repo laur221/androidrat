@@ -1,12 +1,34 @@
 import asyncio
 import websockets
 import json
+from http.server import HTTPServer, BaseHTTPRequestHandler
+import threading
 import os
 
 PORT = int(os.environ.get("PORT", 5000))  # Obține portul dinamic de pe Render
+connected_devices = {}  # Dispozitivele conectate
 
-# Stocăm dispozitivele conectate
-connected_devices = {}
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """
+    Un handler HTTP simplu pentru gestionarea solicitărilor HEAD/GET.
+    """
+    def do_HEAD(self):
+        self.send_response(200)
+        self.end_headers()
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(b"Hello, World!")
+
+def start_http_server():
+    """
+    Pornește un server HTTP pentru gestionarea solicitărilor de sănătate.
+    """
+    server = HTTPServer(("0.0.0.0", PORT), HealthCheckHandler)
+    print(f"HTTP server is running on http://0.0.0.0:{PORT}")
+    server.serve_forever()
 
 async def handle_client(websocket, path):
     """
@@ -40,29 +62,18 @@ async def handle_client(websocket, path):
                 del connected_devices[device_id]
                 print(f"Device {device_id} disconnected.")
 
-async def http_handler(websocket, path):
+async def start_websocket_server():
     """
-    Handle incoming connections, both HTTP and WebSocket.
+    Pornește serverul WebSocket.
     """
-    if "Upgrade" in websocket.request_headers and websocket.request_headers["Upgrade"].lower() == "websocket":
-        # Este o conexiune WebSocket validă
-        await handle_client(websocket, path)
-    else:
-        # Este o solicitare HTTP normală
-        response = (
-            "HTTP/1.1 200 OK\r\n"
-            "Content-Type: text/plain\r\n"
-            "Content-Length: 13\r\n"
-            "\r\n"
-            "Hello, World!"
-        )
-        await websocket.send(response)
-        await websocket.close()
+    async with websockets.serve(handle_client, "0.0.0.0", PORT):
+        print(f"WebSocket server is running on ws://0.0.0.0:{PORT}")
+        await asyncio.Future()  # Rulează la nesfârșit
 
-# Pornim serverul WebSocket/HTTP
-async def main():
-    async with websockets.serve(http_handler, "0.0.0.0", PORT):
-        print(f"Server is running on ws://0.0.0.0:{PORT}")
-        await asyncio.Future()  # Rulează serverul la nesfârșit
+if __name__ == "__main__":
+    # Pornește serverul HTTP într-un thread separat
+    http_thread = threading.Thread(target=start_http_server, daemon=True)
+    http_thread.start()
 
-asyncio.run(main())
+    # Pornește serverul WebSocket
+    asyncio.run(start_websocket_server())
