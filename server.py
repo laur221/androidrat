@@ -1,35 +1,34 @@
-from flask import Flask, request, jsonify
+import asyncio
+import websockets
+import json
+import os
 
-app = Flask(__name__)
+# Obține portul dinamic din variabila de mediu
+PORT = int(os.environ.get("PORT", 5000))
 
-data_store = []
+# Stocăm dispozitivele conectate
+connected_devices = {}
+connected_clients = set()
 
-@app.route('/', methods=['POST'])
-def receive_data():
-    data = request.data.decode('utf-8')
-    print(f"Received data: {data}")
-    data_store.append(data)
-    return "Data received", 200
-
-@app.route('/dashboard', methods=['GET'])
-def dashboard():
-    html = """
-    <html>
-        <head>
-            <title>Dashboard</title>
-        </head>
-        <body>
-            <h1>Received Data</h1>
-            <ul>
+async def handle_client(websocket, path):
     """
-    for log in data_store:
-        html += f"<li>{log}</li>"
-    html += """
-            </ul>
-        </body>
-    </html>
+    Gestionează conexiunile clienților (Android sau Desktop).
     """
-    return html
+    print("New connection established!")
+    try:
+        async for message in websocket:
+            data = json.loads(message)
 
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=5000)
+            # Gestionăm tipul mesajului
+            message_type = data.get("type")
+            if message_type == "register":
+                # Înregistrăm dispozitivul Android
+                device_id = data.get("device_id")
+                connected_devices[device_id] = websocket
+                print(f"Device {device_id} registered.")
+
+            elif message_type == "command":
+                # Trimiterea unei comenzi de la desktop către Android
+                device_id = data.get("device_id")
+                command = data.get("command")
+                if device_id in connected_devices
