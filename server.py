@@ -10,7 +10,13 @@ def handle_client_data():
 
 @app.route('/command', methods=['GET'])
 def send_command():
-    return jsonify({"action": "show_message", "message": "Hello from the server!"})
+    commands = [
+        {"action": "show_message", "message": "This is a server message!"},
+        {"action": "get_device_info"},
+        {"action": "get_installed_apps"},
+    ]
+    return jsonify(commands)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
