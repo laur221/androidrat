@@ -3,9 +3,9 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 
 @app.route('/', methods=['POST'])
-def handle_client_data():
+def receive_data():
     data = request.data.decode('utf-8')
-    print(f"Received data from client: {data}")
+    print(f"Received data: {data}")
     return "Data received", 200
 
 @app.route('/command', methods=['GET'])
