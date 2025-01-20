@@ -16,6 +16,15 @@ def send_command():
         {"action": "get_installed_apps"},
     ]
     return jsonify(commands)
+@app.route('/dashboard', methods=['GET'])
+def dashboard():
+    with open("data_log.txt", "r") as file:
+        logs = file.readlines()
+    html = "<h1>Dashboard</h1><ul>"
+    for log in logs:
+        html += f"<li>{log.strip()}</li>"
+    html += "</ul>"
+    return html
 
 
 if __name__ == "__main__":
