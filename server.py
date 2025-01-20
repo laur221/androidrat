@@ -18,17 +18,19 @@ def receive_data():
         print("Received empty data!")  # Log pentru date goale
     return "Data received", 200
 
-# Endpoint pentru trimiterea comenzilor
+# Endpoint pentru trimiterea comenzilor către aplicația Android
 @app.route('/command', methods=['GET'])
 def send_command():
     commands = [
-        {"action": "show_message", "message": "This is a server message!"},
+        {"action": "show_message", "message": "Hello from the server!"},
         {"action": "get_device_info"},
         {"action": "get_installed_apps"},
+        {"action": "vibrate", "duration": 1000},  # Vibrație de 1 secundă
+        {"action": "turn_on_flashlight"}
     ]
     return jsonify(commands)
 
-# Endpoint pentru dashboard
+# Endpoint pentru dashboard (vizualizarea datelor primite)
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
     # Verifică dacă fișierul există și citește datele
